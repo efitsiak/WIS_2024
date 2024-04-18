@@ -1,0 +1,32 @@
+/* BEGIN CODE HERE */
+*{
+margin: 0;
+padding: 0;
+font-family: "poppins", sans-serif;
+box-sizing: border-box;
+}
+
+.logo{
+ height: 58px;
+ width: 250px
+}
+
+.header-contents {
+      height: 150px;
+      background-color: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 8px;
+    text-align: center;
+  }
+
+/* END CODE HERE */
