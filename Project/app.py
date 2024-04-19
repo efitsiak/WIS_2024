@@ -27,7 +27,7 @@ def search():
     products = list(collection.find({'name': {'$regex': name, '$options': 'i'}}).sort('price', -1))
     return jsonify(products)
 
-    #return ""
+    # return ""
     # END CODE HERE
 
 
@@ -43,8 +43,12 @@ def add_product():
     else:
         inserted_data = collection.insert_one(data)
         return jsonify(str(inserted_data.inserted_id))
-    #return ""
+    # return ""
     # END CODE HERE
+
+
+def calculate_similarity(query_vector, product_vectors):
+    pass
 
 
 @app.route("/content-based-filtering", methods=["POST"])
@@ -56,7 +60,7 @@ def content_based_filtering():
     similarities = calculate_similarity(query_vector, product_vectors)
     similar_products = [product for product, similarity in zip(collection.find(), similarities) if similarity > 0.7]
     return jsonify([product['name'] for product in similar_products])
-    #return ""
+    # return ""
     # END CODE HERE
 
 
@@ -72,5 +76,5 @@ def crawler():
     courses = [course.text.strip() for course in soup.find_all('a', class_='more')]
     driver.quit()
     return jsonify(courses)
-    #return ""
+    # return ""
     # END CODE HERE
