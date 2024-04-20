@@ -3,13 +3,13 @@ from flask import Flask
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 from pymongo import TEXT
-from flask import Flask, jsonify
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from bs4 import BeautifulSoup
 import numpy as np
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
+from pymongo import MongoClient
 # END CODE HERE
 
 app = Flask(__name__)
@@ -22,28 +22,31 @@ mongo.db.products.create_index([("name", TEXT)])
 @app.route("/search", methods=["GET"])
 def search():
     # BEGIN CODE HERE
-    name = request.args.get('name')
-    collection = mongo.db.products
-    products = list(collection.find({'name': {'$regex': name, '$options': 'i'}}).sort('price', -1))
+    name = request.args.get('name')  # λαμβάνει όνομα
+    products = list(mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}}).sort('price', -1))  #
+    # βρίσκουμε τα προϊόντα στη βάση με το ίδιο όνομα και τα ταξινομούμε κατά φθίνουσα σειρά
     return jsonify(products)
 
-    # return ""
     # END CODE HERE
 
 
 @app.route("/add-product", methods=["POST"])
 def add_product():
     # BEGIN CODE HERE
-    data = request.json
-    collection = mongo.db.products
-    existing_product = collection.find_one({'name': data['name']})
+    data = request.json  # λαμβάνουμε δεδομένα από το body του post request
+    existing_product = mongo.db.products.find_one({'name': data['name']})
     if existing_product:
-        collection.update_one({'_id': existing_product['_id']}, {'$set': data})
-        return jsonify({'message': 'Product updated successfully'})
+        mongo.db.products.update_one(
+            {'name': data['name']},
+            {'$set': {
+                'price': data['price'],
+                'production_year': data['production_year'],
+                'color': data['color'],
+                'size': data['size']
+            }})
     else:
-        inserted_data = collection.insert_one(data)
-        return jsonify(str(inserted_data.inserted_id))
-    # return ""
+        mongo.db.products.insert_one(data)
+
     # END CODE HERE
 
 
@@ -78,3 +81,10 @@ def crawler():
     return jsonify(courses)
     # return ""
     # END CODE HERE
+
+
+# Συνδέεστε στο MongoDB server
+client = MongoClient('localhost', 27017)
+
+# Δημιουργείτε ή επιλέγετε τη βάση δεδομένων
+db = client['pspi']
