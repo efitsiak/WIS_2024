@@ -1,15 +1,15 @@
 # BEGIN CODE HERE
-from flask import Flask
-from flask_pymongo import PyMongo
-from flask_cors import CORS
-from pymongo import TEXT
-from flask import Flask, request, jsonify
-from bs4 import BeautifulSoup
 import numpy as np
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
+from bs4 import BeautifulSoup
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from flask_pymongo import PyMongo
 from pymongo import MongoClient
+from pymongo import TEXT
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
 # END CODE HERE
 
 app = Flask(__name__)
@@ -50,20 +50,31 @@ def add_product():
     # END CODE HERE
 
 
-def calculate_similarity(query_vector, product_vectors):
-    pass
-
-
 @app.route("/content-based-filtering", methods=["POST"])
 def content_based_filtering():
     # BEGIN CODE HERE
-    query_vector = np.array(request.json['features'])
+    query_features = request.json
+    query_vector = np.array([query_features['price'], query_features['production_year'], query_features['color'],
+                             query_features['size']])  # μετατροπή χαρακτηριστικών σε διάνυσμα
     collection = mongo.db.products
-    product_vectors = [np.array([product['price'], product['production_year'], product['color'], product['size']]) for product in collection.find()]
-    similarities = calculate_similarity(query_vector, product_vectors)
+    product_vectors = [np.array([product['price'], product['production_year'], product['color'], product['size']])
+                       for product in collection.find()]
+
+    # Υπολογίζουμε την ομοιότητα cosine similarity μεταξύ του query και κάθε προϊόντος
+
+    similarities = []
+    for product_vector in product_vectors:
+        dot_product = np.dot(query_vector, product_vector)
+        query_vector_norm = np.linalg.norm(query_vector)
+        product_vector_norm = np.linalg.norm(product_vector)
+        similarity = dot_product / (query_vector_norm * product_vector_norm)
+        similarities.append(similarity)
+
+    # Επιλέγουμε τα προϊόντα που έχουν ομοιότητα πάνω από 70%
     similar_products = [product for product, similarity in zip(collection.find(), similarities) if similarity > 0.7]
+
+    # Επιστρέφουμε τα ονόματα των παρόμοιων προϊόντων
     return jsonify([product['name'] for product in similar_products])
-    # return ""
     # END CODE HERE
 
 
