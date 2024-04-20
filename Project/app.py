@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_pymongo import PyMongo
-from pymongo import MongoClient
 from pymongo import TEXT
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -92,10 +91,3 @@ def crawler():
     return jsonify(courses)
     # return ""
     # END CODE HERE
-
-
-# Συνδέεστε στο MongoDB server
-client = MongoClient('localhost', 27017)
-
-# Δημιουργείτε ή επιλέγετε τη βάση δεδομένων
-db = client['pspi']
