@@ -1,4 +1,6 @@
 # BEGIN CODE HERE
+from smtpd import Options
+
 import numpy as np
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
@@ -21,10 +23,14 @@ mongo.db.products.create_index([("name", TEXT)])
 @app.route("/search", methods=["GET"])
 def search():
     # BEGIN CODE HERE
-    name = request.args.get('name')  # λαμβάνει όνομα
-    products = list(mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}}).sort('price', -1))  #
-    # βρίσκουμε τα προϊόντα στη βάση με το ίδιο όνομα και τα ταξινομούμε κατά φθίνουσα σειρά
-    return jsonify(products)
+    name = request.args.get('name')  # Λαμβάνουμε την παράμετρο name από το query string
+
+    found_products = mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}})
+    if found_products.count() == 0:
+        return jsonify([])
+
+    found_products = sorted(found_products, key=lambda x: x['price'], reverse=True)
+    return jsonify(found_products)
 
     # END CODE HERE
 
@@ -81,13 +87,14 @@ def content_based_filtering():
 def crawler():
     # BEGIN CODE HERE
     semester = request.args.get('semester')
-    url = f"https://qa.auth.gr/el/x/studyguide/{semester}/current"
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service)
+    url = 'https://qa.auth.gr/el/x/studyguide/600000438/current'
+    options = Options()
+    options.headless = True
+    driver = webdriver.Chrome(options=options)
     driver.get(url)
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    courses = [course.text.strip() for course in soup.find_all('a', class_='more')]
-    driver.quit()
-    return jsonify(courses)
-    # return ""
+    elements = driver.find_elements(f"//table[@id='exam{semester}']//tr[contains(@class, 'odd') or contains(@class, "
+                                    f"'even')]//td[1]")
+    res = [element.text for element in elements]
+
+    return jsonify(res)
     # END CODE HERE
