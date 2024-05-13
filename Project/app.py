@@ -1,5 +1,4 @@
 # BEGIN CODE HERE
-from smtpd import Options
 
 import numpy as np
 from bs4 import BeautifulSoup
@@ -8,6 +7,7 @@ from flask_cors import CORS
 from flask_pymongo import PyMongo
 from pymongo import TEXT
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
