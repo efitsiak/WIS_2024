@@ -1,44 +1,82 @@
-// Αλληλεπίδραση 1: Αναζήτηση προϊόντος
-document.getElementById("searchBtn").addEventListener("click", function() {
-    var searchInput = document.getElementById("searchInput").value;
-    fetch("/search?name=" + searchInput)
-        .then(response => response.json())
-        .then(data => {
-            var productsTable = document.getElementById("productsTable");
-            productsTable.innerHTML = ""; // Αδειάζει τον πίνακα πριν προσθέσει νέα δεδομένα
-            data.forEach(product => {
-                var row = productsTable.insertRow();
-                row.insertCell(0).innerHTML = product.id;
-                row.insertCell(1).innerHTML = product.name;
-                row.insertCell(2).innerHTML = product.production_year;
-                row.insertCell(3).innerHTML = product.price;
-                row.insertCell(4).innerHTML = product.color;
-                row.insertCell(5).innerHTML = product.size;
-            });
-        })
-        .catch(error => console.error('Error:', error));
-});
+const api = "http://127.0.0.1:5000";
 
-// Αλληλεπίδραση 2: Προσθήκη προϊόντος
-document.getElementById("addProductForm").addEventListener("submit", function(event) {
-    event.preventDefault();
-    var formData = new FormData(this);
-    var jsonData = {};
-    formData.forEach((value, key) => { jsonData[key] = value });
-    fetch("/add-product", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(jsonData)
-    })
-    .then(response => {
-        if (response.ok) {
-            alert("ΟΚ");
-            document.getElementById("addProductForm").reset(); // Αδειάζει τη φόρμα μετά την επιτυχή υποβολή
-        } else {
-            throw new Error('Network response was not ok');
+window.onload = () => {
+    // BEGIN CODE HERE
+    const searchButton = document.getElementById('search-button');
+        const addProductForm = document.getElementById('add-product-form');
+
+        if (searchButton) {
+            searchButton.addEventListener('click', searchButtonOnClick);
         }
-    })
-    .catch(error => console.error('Error:', error));
-});
+
+        if (addProductForm) {
+            addProductForm.addEventListener('submit', productFormOnSubmit);
+        }
+    // END CODE HERE
+}
+
+searchButtonOnClick = () => {
+    // BEGIN CODE HERE
+    const searchInput = document.getElementById('search-input').value;
+    const resultsBody = document.getElementById('results-body');
+
+        // Κάνουμε ένα GET request στο endpoint /search
+        fetch(`${api}/search?name=${encodeURIComponent(searchInput)}`)
+            .then(response => response.json())
+            .then(data => {
+                // Καθαρίζουμε τα προηγούμενα αποτελέσματα
+                resultsBody.innerHTML = '';
+                // Προσθέτουμε τα νέα αποτελέσματα
+                data.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${product.id}</td>
+                        <td>${product.name}</td>
+                        <td>${product.production_year}</td>
+                        <td>${product.price}</td>
+                        <td>${product.color}</td>
+                        <td>${product.size}</td>
+                    `;
+                    resultsBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    // END CODE HERE
+}
+
+productFormOnSubmit = (event) => {
+    // BEGIN CODE HERE
+    event.preventDefault();
+
+        const formData = new FormData(document.getElementById('add-product-form'));
+        const productData = {
+            name: formData.get('name'),
+            production_year: parseInt(formData.get('production_year')),
+            price: parseFloat(formData.get('price')),
+            color: parseInt(formData.get('color')),
+            size: parseInt(formData.get('size'))
+        };
+
+        // Κάνουμε ένα POST request στο endpoint /add-product
+        fetch(`${api}/add-product`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(productData)
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('ΟΚ');
+                document.getElementById('add-product-form').reset();
+            } else {
+                throw new Error('Failed to add product');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    // END CODE HERE
+}
