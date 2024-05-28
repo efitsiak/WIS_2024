@@ -3,15 +3,15 @@ const api = "http://127.0.0.1:5000";
 window.onload = () => {
     // BEGIN CODE HERE
     const searchButton = document.getElementById('search-button');
-        const addProductForm = document.getElementById('add-product-form');
+    const addProductForm = document.getElementById('add-product-form');
 
-        if (searchButton) {
-            searchButton.addEventListener('click', searchButtonOnClick);
-        }
+    if (searchButton) {
+        searchButton.addEventListener('click', searchButtonOnClick);
+    }
 
-        if (addProductForm) {
-            addProductForm.addEventListener('submit', productFormOnSubmit);
-        }
+    if (addProductForm) {
+        addProductForm.addEventListener('submit', productFormOnSubmit);
+    }
     // END CODE HERE
 }
 
@@ -50,33 +50,33 @@ productFormOnSubmit = (event) => {
     // BEGIN CODE HERE
     event.preventDefault();
 
-        const formData = new FormData(document.getElementById('add-product-form'));
-        const productData = {
-            name: formData.get('name'),
-            production_year: parseInt(formData.get('production_year')),
-            price: parseFloat(formData.get('price')),
-            color: parseInt(formData.get('color')),
-            size: parseInt(formData.get('size'))
-        };
+    const formData = new FormData(document.getElementById('add-product-form'));
+    const productData = {
+        name: formData.get('name'),
+        production_year: parseInt(formData.get('production_year')),
+        price: parseFloat(formData.get('price')),
+        color: parseInt(formData.get('color')),
+        size: parseInt(formData.get('size'))
+    };
 
-        // Κάνουμε ένα POST request στο endpoint /add-product
-        fetch(`${api}/add-product`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(productData)
-        })
-        .then(response => {
-            if (response.ok) {
-                alert('ΟΚ');
-                document.getElementById('add-product-form').reset();
-            } else {
-                throw new Error('Failed to add product');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+    // Κάνουμε ένα POST request στο endpoint /add-product
+    fetch(`${api}/add-product`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(productData)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('ΟΚ');
+            document.getElementById('add-product-form').reset();
+        } else {
+            throw new Error('Failed to add product');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
     // END CODE HERE
 }

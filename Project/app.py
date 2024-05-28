@@ -1,5 +1,4 @@
 # BEGIN CODE HERE
-
 import numpy as np
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -35,19 +34,60 @@ def search():
 @app.route("/add-product", methods=["POST"])
 def add_product():
     # BEGIN CODE HERE
-    data = request.json  # λαμβάνουμε δεδομένα από το body του post request
-    existing_product = mongo.db.products.find_one({'name': data['name']})
-    if existing_product:
+    data = request.form
+
+    # Server-side validation
+    name = data.get("name")
+    production_year = data.get("production_year")
+    price = data.get("price")
+    color = data.get("color")
+    size = data.get("size")
+
+    if not name or not isinstance(name, str):
+        return jsonify({"error": "Invalid name"}), 400
+    if not production_year or not re.match(r'^\d{4}$', production_year):
+        return jsonify({"error": "Invalid production year"}), 400
+    try:
+        price = float(price)
+        if price < 0:
+            raise ValueError
+    except ValueError:
+        return jsonify({"error": "Invalid price"}), 400
+    try:
+        color = int(color)
+        if color not in [1, 2, 3]:
+            raise ValueError
+    except ValueError:
+        return jsonify({"error": "Invalid color"}), 400
+    try:
+        size = int(size)
+        if size not in [1, 2, 3, 4]:
+            raise ValueError
+    except ValueError:
+        return jsonify({"error": "Invalid size"}), 400
+
+    exists = mongo.db.products.find_one({"name": name})
+    if exists:
         mongo.db.products.update_one(
-            {'name': data['name']},
-            {'$set': {
-                'price': data['price'],
-                'production_year': data['production_year'],
-                'color': data['color'],
-                'size': data['size']
-            }})
+            {"name": name},
+            {"$set": {
+                "production_year": production_year,
+                "price": price,
+                "color": color,
+                "size": size
+            }}
+        )
+        return jsonify({"message": "Product updated successfully"}), 200
     else:
-        mongo.db.products.insert_one(data)
+        mongo.db.products.insert_one({
+            "name": name,
+            "production_year": production_year,
+            "price": price,
+            "color": color,
+            "size": size
+        })
+        return jsonify({"message": "Product added successfully"}), 200
+
 
     # END CODE HERE
 
