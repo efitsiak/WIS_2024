@@ -1,11 +1,12 @@
 # BEGIN CODE HERE
 import numpy as np
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify ,render_template, url_for, redirect
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 from pymongo import TEXT
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+import re
 
 # END CODE HERE
 
@@ -15,6 +16,9 @@ CORS(app)
 mongo = PyMongo(app)
 mongo.db.products.create_index([("name", TEXT)])
 
+@app.route('/', methods=('GET', 'POST'))
+def index():
+    return render_template('products.html')
 
 @app.route("/search", methods=["GET"])
 def search():
@@ -34,6 +38,7 @@ def search():
 @app.route("/add-product", methods=["POST"])
 def add_product():
     # BEGIN CODE HERE
+    
     data = request.form
 
     # Server-side validation
