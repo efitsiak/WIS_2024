@@ -9,26 +9,28 @@ from selenium.webdriver.chrome.options import Options
 import re
 from pymongo import MongoClient
 
+
 # END CODE HERE
 
-#app = Flask(__name__)
-#app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/pspi"
-#CORS(app)
-#mongo = PyMongo(app)
-#mongo.db.products.create_index([("name", TEXT)])
-
-app = Flask(__name__ ,static_url_path='/static')
-
-client = MongoClient('localhost', 27017)
-db = client.db
-products= db.products
-
-products.create_index([("name", TEXT)])
+app = Flask(__name__)
+app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/pspi"
+CORS(app)
+mongo = PyMongo(app)
+mongo.db.products.create_index([("name", TEXT)])
 
 
 @app.route("/")
 def index():
-    return render_template('products.html')
+    return render_template('homepage.html')
+
+@app.route("/products")
+def products():
+    try:
+        return render_template('products.html')
+    except Exception as e:
+        print(f"Error: {e}")
+        return "An error occurred while trying to load the products page."
+
 
 
 @app.route("/search", methods=["GET"])
@@ -36,7 +38,7 @@ def search():
     # BEGIN CODE HERE
     name = request.args.get('name')  # Λαμβάνουμε την παράμετρο name από το query string
 
-    found_products = products.find({'name': {'$regex': name, '$options': 'i'}})
+    found_products = mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}})
     if found_products.count() == 0:
         return jsonify([])
 
@@ -50,21 +52,21 @@ def search():
 def add_product():
     # BEGIN CODE HERE
     
-   if request.method == 'POST':
-    name = request.form['name']
-    production_year = request.form['year']
-    price = request.form['price']
-    color = request.form['color']
-    size = request.form['size']
-    products.insert_one({
+    if request.method == 'POST':
+     name = request.form['name']
+     production_year = request.form['year']
+     price = request.form['price']
+     color = request.form['color']
+     size = request.form['size']
+     mongo.db.products.insert_one({
             "name": name,
             "year": production_year,
             "price": price,
             "color": color,
             "size": size
         })
-    return redirect('add-product')
-   return render_template('products.html')
+     return jsonify({'message': 'Product added successfully'})
+    return render_template('products.html')
  
     # END CODE HERE
 
@@ -75,7 +77,7 @@ def content_based_filtering():
     query_features = request.json
     query_vector = np.array([query_features['price'], query_features['production_year'], query_features['color'],
                              query_features['size']])  # μετατροπή χαρακτηριστικών σε διάνυσμα
-    collection = products
+    collection = mongo.db.products
     product_vectors = [np.array([product['price'], product['production_year'], product['color'], product['size']])
                        for product in collection.find()]
 
