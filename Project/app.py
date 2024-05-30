@@ -7,25 +7,36 @@ from pymongo import TEXT
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import re
+from pymongo import MongoClient
 
 # END CODE HERE
 
-app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/pspi"
-CORS(app)
-mongo = PyMongo(app)
-mongo.db.products.create_index([("name", TEXT)])
+#app = Flask(__name__)
+#app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/pspi"
+#CORS(app)
+#mongo = PyMongo(app)
+#mongo.db.products.create_index([("name", TEXT)])
 
-@app.route('/', methods=('GET', 'POST'))
+app = Flask(__name__ ,static_url_path='/static')
+
+client = MongoClient('localhost', 27017)
+db = client.db
+products= db.products
+
+products.create_index([("name", TEXT)])
+
+
+@app.route("/")
 def index():
     return render_template('products.html')
+
 
 @app.route("/search", methods=["GET"])
 def search():
     # BEGIN CODE HERE
     name = request.args.get('name')  # Λαμβάνουμε την παράμετρο name από το query string
 
-    found_products = mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}})
+    found_products = products.find({'name': {'$regex': name, '$options': 'i'}})
     if found_products.count() == 0:
         return jsonify([])
 
@@ -39,61 +50,22 @@ def search():
 def add_product():
     # BEGIN CODE HERE
     
-    data = request.form
-
-    # Server-side validation
-    name = data.get("name")
-    production_year = data.get("production_year")
-    price = data.get("price")
-    color = data.get("color")
-    size = data.get("size")
-
-    if not name or not isinstance(name, str):
-        return jsonify({"error": "Invalid name"}), 400
-    if not production_year or not re.match(r'^\d{4}$', production_year):
-        return jsonify({"error": "Invalid production year"}), 400
-    try:
-        price = float(price)
-        if price < 0:
-            raise ValueError
-    except ValueError:
-        return jsonify({"error": "Invalid price"}), 400
-    try:
-        color = int(color)
-        if color not in [1, 2, 3]:
-            raise ValueError
-    except ValueError:
-        return jsonify({"error": "Invalid color"}), 400
-    try:
-        size = int(size)
-        if size not in [1, 2, 3, 4]:
-            raise ValueError
-    except ValueError:
-        return jsonify({"error": "Invalid size"}), 400
-
-    exists = mongo.db.products.find_one({"name": name})
-    if exists:
-        mongo.db.products.update_one(
-            {"name": name},
-            {"$set": {
-                "production_year": production_year,
-                "price": price,
-                "color": color,
-                "size": size
-            }}
-        )
-        return jsonify({"message": "Product updated successfully"}), 200
-    else:
-        mongo.db.products.insert_one({
+   if request.method == 'POST':
+    name = request.form['name']
+    production_year = request.form['year']
+    price = request.form['price']
+    color = request.form['color']
+    size = request.form['size']
+    products.insert_one({
             "name": name,
-            "production_year": production_year,
+            "year": production_year,
             "price": price,
             "color": color,
             "size": size
         })
-        return jsonify({"message": "Product added successfully"}), 200
-
-
+    return redirect('add-product')
+   return render_template('products.html')
+ 
     # END CODE HERE
 
 
@@ -103,7 +75,7 @@ def content_based_filtering():
     query_features = request.json
     query_vector = np.array([query_features['price'], query_features['production_year'], query_features['color'],
                              query_features['size']])  # μετατροπή χαρακτηριστικών σε διάνυσμα
-    collection = mongo.db.products
+    collection = products
     product_vectors = [np.array([product['price'], product['production_year'], product['color'], product['size']])
                        for product in collection.find()]
 
@@ -139,4 +111,8 @@ def crawler():
     res = [element.text for element in elements]
 
     return jsonify(res)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
     # END CODE HERE
