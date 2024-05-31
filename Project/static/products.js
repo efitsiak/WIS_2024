@@ -48,14 +48,14 @@ searchButtonOnClick = () => {
 
 //productFormOnSubmit = (event) => {
     // BEGIN CODE HERE
-    document.getElementById('dataForm').addEventListener('postReqOnClick', function(event) {
+    document.getElementById('dataForm').addEventListener('submit', function(event) {
         event.preventDefault();
         const formData = {
-            name: document.getElementById('name').value,
-            year: document.getElementById('year').value,
-            price: document.getElementById('price').value,
-            color: document.getElementById('color').value,
-            size: document.getElementById('size').value,
+            name: document.getElementById('inputName').value,
+            year: document.getElementById('inputYear').value,
+            price: document.getElementById('inputPrice').value,
+            color: document.getElementById('inputColor').value,
+            size: document.getElementById('inputSize').value,
         };
 
         fetch('/add-product', {
@@ -67,8 +67,7 @@ searchButtonOnClick = () => {
         })
         .then(response => {
             if (response.ok) {
-                alert('Form submitted successfully');
-                // You can redirect or do something else here
+                window.location.href = '/products';
             } else {
                 throw new Error('Form submission failed');
             }

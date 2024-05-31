@@ -48,26 +48,27 @@ def search():
     # END CODE HERE
 
 
-@app.route("/add-product", methods=["POST"])
+@app.route("/add-product", methods=['POST'])
 def add_product():
     # BEGIN CODE HERE
     
-    if request.method == 'POST':
-     name = request.form['name']
-     production_year = request.form['year']
-     price = request.form['price']
-     color = request.form['color']
-     size = request.form['size']
-     mongo.db.products.insert_one({
-            "name": name,
-            "year": production_year,
-            "price": price,
-            "color": color,
-            "size": size
-        })
-     return jsonify({'message': 'Product added successfully'})
-    return render_template('products.html')
- 
+    data = request.json
+    name = data.get('inputName')
+    production_year = data.get('inputYear')
+    price = data.get('inputPrice')
+    color = data.get('inputColor')
+    size = data.get('inputSize')
+
+    mongo.db.products.insert_one({
+        "name": name,
+        "year": production_year,
+        "price": price,
+        "color": color,
+        "size": size
+    })
+    return jsonify({"message": "Product added successfully!"}), 201
+   
+    
     # END CODE HERE
 
 
