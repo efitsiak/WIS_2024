@@ -51,24 +51,23 @@ def search():
 @app.route("/add-product", methods=['POST'])
 def add_product():
     # BEGIN CODE HERE
-    
-    data = request.json
-    name = data.get('inputName')
-    production_year = data.get('inputYear')
-    price = data.get('inputPrice')
-    color = data.get('inputColor')
-    size = data.get('inputSize')
-
-    mongo.db.products.insert_one({
-        "name": name,
-        "year": production_year,
-        "price": price,
-        "color": color,
-        "size": size
-    })
-    return jsonify({"message": "Product added successfully!"}), 201
-   
-    
+        data = request.get_json()  # Get the JSON data from the request
+        name = data.get('name')
+        production_year = data.get('year')
+        price = data.get('price')
+        color = data.get('color')
+        size = data.get('size')
+        print(f"Received data: {data}")  # Debug print statement
+        mongo.db.products.insert_one({
+            "name": name,
+            "year": production_year,
+            "price": price,
+            "color": color,
+            "size": size
+        })
+        return jsonify({"status": "success"}), 201  # Return success response
+  
+       
     # END CODE HERE
 
 
