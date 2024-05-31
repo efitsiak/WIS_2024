@@ -1,54 +1,50 @@
-/*const api = "http://127.0.0.1:5000";
+const api = "http://127.0.0.1:5000";
 
 window.onload = () => {
     // BEGIN CODE HERE
     const searchButton = document.getElementById('search-button');
-    const addProductForm = document.getElementById('add-product-form');
+    const addProductForm = document.getElementById('dataForm');
 
     if (searchButton) {
         searchButton.addEventListener('click', searchButtonOnClick);
     }
 
     if (addProductForm) {
-        addProductForm.addEventListener('submit', postReqOnClick);
+        addProductForm.addEventListener('submit', productFormOnSubmit);
     }
     // END CODE HERE
 }
 
 searchButtonOnClick = () => {
     // BEGIN CODE HERE
-    const searchInput = document.getElementById('search-input').value;
-    const resultsBody = document.getElementById('results-body');
+    const searchInput = document.getElementById('inputSearch').value;
+    const resultsTable = document.getElementById('resultsTable');
 
-        // Κάνουμε ένα GET request στο endpoint /search
-        fetch(`${api}/search?name=${encodeURIComponent(searchInput)}`)
-            .then(response => response.json())
-            .then(data => {
-                // Καθαρίζουμε τα προηγούμενα αποτελέσματα
-                resultsBody.innerHTML = '';
-                // Προσθέτουμε τα νέα αποτελέσματα
-                data.forEach(product => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${product.id}</td>
-                        <td>${product.name}</td>
-                        <td>${product.production_year}</td>
-                        <td>${product.price}</td>
-                        <td>${product.color}</td>
-                        <td>${product.size}</td>
-                    `;
-                    resultsBody.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
+    fetch(`${api}/search?name=${encodeURIComponent(searchInput)}`)
+        .then(response => response.json())
+        .then(data => {
+            resultsTable.innerHTML = ''; // Καθαρίζουμε τον πίνακα πριν εμφανίσουμε τα αποτελέσματα
+            data.forEach(product => {
+                const row = resultsTable.insertRow();
+                row.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.name}</td>
+                    <td>${product.production_year}</td>
+                    <td>${product.price}</td>
+                    <td>${product.color}</td>
+                    <td>${product.size}</td>
+                `;
             });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
     // END CODE HERE
-}*/
+}
 
-//productFormOnSubmit = (event) => {
+productFormOnSubmit = (event) => {
     // BEGIN CODE HERE
-    document.getElementById('dataForm').addEventListener('submit', function(event) {
+   // document.getElementById('dataForm').addEventListener('submit', function(event) {
         event.preventDefault();
         const formData = {
             name: document.getElementById('inputName').value,
@@ -75,7 +71,7 @@ searchButtonOnClick = () => {
         .catch(error => {
             console.error('Error:', error);
         });
-    });
+   // });
     
     // END CODE HERE
-//}
+}

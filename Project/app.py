@@ -36,14 +36,31 @@ def products():
 @app.route("/search", methods=["GET"])
 def search():
     # BEGIN CODE HERE
-    name = request.args.get('name')  # Λαμβάνουμε την παράμετρο name από το query string
+    name = request.args.get('name')  
 
     found_products = mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}})
-    if found_products.count() == 0:
+    found_products_list = list(found_products)  # Μετατροπή του Cursor σε λίστα
+    
+    if len(found_products_list) == 0:
         return jsonify([])
 
-    found_products = sorted(found_products, key=lambda x: x['price'], reverse=True)
-    return jsonify(found_products)
+    # Ταξινόμηση των προϊόντων κατά φθίνουσα σειρά τιμής
+    found_products_sorted = sorted(found_products_list, key=lambda x: x['price'], reverse=True)
+    
+    # Μετατροπή των αποτελεσμάτων σε λίστα JSON objects
+    results = []
+    for product in found_products_sorted:
+        result = {
+            "id": str(product['_id']),  # Μετατροπή ObjectId σε string
+            "name": product['name'],
+            "production_year": product['year'],
+            "price": product['price'],
+            "color": product['color'],
+            "size": product['size']
+        }
+        results.append(result)
+
+    return jsonify(results)
 
     # END CODE HERE
 
@@ -58,6 +75,8 @@ def add_product():
         color = data.get('color')
         size = data.get('size')
         print(f"Received data: {data}")  # Debug print statement
+        
+        
         mongo.db.products.insert_one({
             "name": name,
             "year": production_year,
