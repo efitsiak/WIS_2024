@@ -37,7 +37,7 @@ def products():
 def search():
     # BEGIN CODE HERE
     name = request.args.get('name')  
-
+    
     found_products = mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}})
     found_products_list = list(found_products)  # Μετατροπή του Cursor σε λίστα
     
@@ -59,7 +59,7 @@ def search():
             "size": product['size']
         }
         results.append(result)
-
+    
     return jsonify(results)
 
     # END CODE HERE
@@ -77,12 +77,28 @@ def add_product():
         print(f"Received data: {data}")  # Debug print statement
         
         
+         # Μετατρέπουμε το χρώμα από το κείμενο στον αντίστοιχο κωδικό
+        colors_mapping = {
+         'red': 1,
+          'yellow': 2,
+         'blue': 3
+         }
+        color_code = colors_mapping.get(data.get('color').lower())  # Χρησιμοποιούμε lower() για να αντιστοιχίσουμε ανεξαρτήτως πεζών-κεφαλαίων
+
+    # Μετατρέπουμε το μέγεθος από το κείμενο στον αντίστοιχο κωδικό
+        sizes_mapping = {
+        'small': 1,
+        'medium': 2,
+        'large': 3,
+        'extra large': 4
+        }
+        size_code = sizes_mapping.get(data.get('size').lower()) 
         mongo.db.products.insert_one({
             "name": name,
             "year": production_year,
             "price": price,
-            "color": color,
-            "size": size
+            "color": color_code,
+            "size": size_code
         })
         return jsonify({"status": "success"}), 201  # Return success response
   
