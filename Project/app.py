@@ -36,31 +36,36 @@ def products():
 @app.route("/search", methods=["GET"])
 def search():
     # BEGIN CODE HERE
-    name = request.args.get('name')  
-    
-    found_products = mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}})
-    found_products_list = list(found_products)  # Μετατροπή του Cursor σε λίστα
-    
-    if len(found_products_list) == 0:
-        return jsonify([])
+    name = request.args.get('name')
 
-    # Ταξινόμηση των προϊόντων κατά φθίνουσα σειρά τιμής
-    found_products_sorted = sorted(found_products_list, key=lambda x: x['price'], reverse=True)
-    
-    # Μετατροπή των αποτελεσμάτων σε λίστα JSON objects
-    results = []
-    for product in found_products_sorted:
-        result = {
-            "id": str(product['_id']),  # Μετατροπή ObjectId σε string
-            "name": product['name'],
-            "production_year": product['year'],
-            "price": product['price'],
-            "color": product['color'],
-            "size": product['size']
-        }
-        results.append(result)
-    
-    return jsonify(results)
+    if name is None:
+        name = ""
+    elif not isinstance(name, str):
+        return jsonify({"error": "Name parameter must be a string"}), 400
+    try:
+        found_products = mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}})
+        found_products_list = list(found_products)  # Μετατροπή του Cursor σε λίστα
+        if len(found_products_list) == 0:
+            return jsonify([])
+
+        # Ταξινόμηση των προϊόντων κατά φθίνουσα σειρά τιμής
+        found_products_sorted = sorted(found_products_list, key=lambda x: x['price'], reverse=True)
+
+        # Μετατροπή των αποτελεσμάτων σε λίστα JSON objects
+        results = []
+        for product in found_products_sorted:
+            result = {
+                "id": str(product['_id']),  # Μετατροπή ObjectId σε string
+                "name": product['name'],
+                "production_year": product['year'],
+                "price": product['price'],
+                "color": product['color'],
+                "size": product['size']
+            }
+            results.append(result)
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     # END CODE HERE
 
@@ -68,42 +73,44 @@ def search():
 @app.route("/add-product", methods=['POST'])
 def add_product():
     # BEGIN CODE HERE
-        data = request.get_json()  # Get the JSON data from the request
-        name = data.get('name')
-        production_year = data.get('year')
-        price = data.get('price')
-        color = data.get('color')
-        size = data.get('size')
-        print(f"Received data: {data}")  # Debug print statement
-        
-        
-         # Μετατρέπουμε το χρώμα από το κείμενο στον αντίστοιχο κωδικό
-        colors_mapping = {
-         'red': 1,
-          'yellow': 2,
-         'blue': 3
-         }
-        color_code = colors_mapping.get(data.get('color').lower())  # Χρησιμοποιούμε lower() για να αντιστοιχίσουμε ανεξαρτήτως πεζών-κεφαλαίων
+    data = request.get_json()  # Get the JSON data from the request
+    name = data.get('name')
+    production_year = data.get('year')
+    price = data.get('price')
+    color = data.get('color')
+    size = data.get('size')
+    print(f"Received data: {data}")  # Debug print statement
 
+
+    # Μετατρέπουμε το χρώμα από το κείμενο στον αντίστοιχο κωδικό
+    colors_mapping = {
+        'red': 1,
+        'yellow': 2,
+        'blue': 3
+    }
+    color_code = colors_mapping.get(color.lower(), None)  # Χρησιμοποιούμε lower() για να αντιστοιχίσουμε ανεξαρτήτως πεζών-κεφαλαίων
     # Μετατρέπουμε το μέγεθος από το κείμενο στον αντίστοιχο κωδικό
-        sizes_mapping = {
+    sizes_mapping = {
         'small': 1,
         'medium': 2,
         'large': 3,
         'extra large': 4
-        }
-        size_code = sizes_mapping.get(data.get('size').lower()) 
-        mongo.db.products.insert_one({
-            "name": name,
-            "year": production_year,
-            "price": price,
-            "color": color_code,
-            "size": size_code
-        })
-        return jsonify({"status": "success"}), 201  # Return success response
-  
-       
-    # END CODE HERE
+    }
+    size_code = sizes_mapping.get(size.lower(), None)
+    if color_code is None or size_code is None:
+        return jsonify({"error": "Invalid color or size"}), 400
+
+    mongo.db.products.insert_one({
+        "name": name,
+        "year": production_year,
+        "price": price,
+        "color": color_code,
+        "size": size_code
+    })
+    return jsonify({"status": "success"}), 201  # Return success response
+
+
+# END CODE HERE
 
 
 @app.route("/content-based-filtering", methods=["POST"])
@@ -111,10 +118,14 @@ def content_based_filtering():
     # BEGIN CODE HERE
     query_features = request.json
     query_vector = np.array([query_features['price'], query_features['production_year'], query_features['color'],
-                             query_features['size']])  # μετατροπή χαρακτηριστικών σε διάνυσμα
+                             query_features['size']])
+
     collection = mongo.db.products
+    product_documents = collection.find()
+
+    # Μετατρέπουμε τα αποτελέσματα της find() σε λίστα προκειμένου να τα επαναχρησιμοποιήσουμε
     product_vectors = [np.array([product['price'], product['production_year'], product['color'], product['size']])
-                       for product in collection.find()]
+                       for product in product_documents]
 
     # Υπολογίζουμε την ομοιότητα cosine similarity μεταξύ του query και κάθε προϊόντος
 
@@ -143,8 +154,8 @@ def crawler():
     options.headless = True
     driver = webdriver.Chrome(options=options)
     driver.get(url)
-    elements = driver.find_elements(f"//table[@id='exam{semester}']//tr[contains(@class, 'odd') or contains(@class, "
-                                    f"'even')]//td[1]")
+    elements = driver.find_elements_by_css_selector(f"#exam{semester} tr.odd td:nth-child(1), #exam{semester} tr.even td:nth-child(1)")
+
     res = [element.text for element in elements]
 
     return jsonify(res)
