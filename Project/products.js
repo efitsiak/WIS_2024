@@ -2,7 +2,7 @@ const api = "http://127.0.0.1:5000";
 
 window.onload = () => {
     // BEGIN CODE HERE
-    window.open = api;
+    const api = "http://127.0.0.1:5000";
     const searchButton = document.getElementById('search-button');
     const addProductForm = document.getElementById('dataForm');
 

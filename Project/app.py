@@ -1,13 +1,11 @@
 # BEGIN CODE HERE
 import numpy as np
-from flask import Flask, request, jsonify ,render_template, url_for, redirect
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 from pymongo import TEXT
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import re
-from pymongo import MongoClient
 
 
 # END CODE HERE
@@ -19,12 +17,13 @@ mongo = PyMongo(app)
 mongo.db.products.create_index([("name", TEXT)])
 
 
-
-
 @app.route("/search", methods=["GET"])
 def search():
     # BEGIN CODE HERE
-    name = request.args.get('name')
+    name = request.args.get("name")
+
+    if not name:
+        return jsonify({"error": "Name parameter is required"}), 400
 
     found_products = mongo.db.products.find({'name': {'$regex': name, '$options': 'i'}})
     found_products_list = list(found_products)  # Μετατροπή του Cursor σε λίστα
@@ -52,7 +51,7 @@ def search():
     # END CODE HERE
 
 
-@app.route("/add-product", methods=['POST'])
+@app.route("/add-product", methods=["POST"])
 def add_product():
     # BEGIN CODE HERE
     data = request.get_json()  # Get the JSON data from the request
@@ -62,7 +61,6 @@ def add_product():
     color = data.get('color')
     size = data.get('size')
     print(f"Received data: {data}")  # Debug print statement
-
 
     # Μετατρέπουμε το χρώμα από το κείμενο στον αντίστοιχο κωδικό
     colors_mapping = {
@@ -87,26 +85,31 @@ def add_product():
         "size": size_code
     })
     return jsonify({"status": "success"}), 201  # Return success response
-
-
-# END CODE HERE
+    # END CODE HERE
 
 
 @app.route("/content-based-filtering", methods=["POST"])
 def content_based_filtering():
     # BEGIN CODE HERE
     query_features = request.json
-    query_vector = np.array([query_features['price'], query_features['production_year'], query_features['color'],
-                             query_features['size']])
+    try:
+        query_vector = np.array([
+            query_features['price'],
+            query_features['production_year'],
+            query_features['color'],
+            query_features['size']
+        ])
+    except KeyError as e:
+        return jsonify({"error": f"Missing key: {e}"}), 400
 
     collection = mongo.db.products
+    product_documents = list(collection.find())
 
     # Μετατρέπουμε τα αποτελέσματα της find() σε λίστα προκειμένου να τα επαναχρησιμοποιήσουμε
     product_vectors = [np.array([product['price'], product['production_year'], product['color'], product['size']])
-                       for product in collection.find()]]
+                       for product in product_documents]
 
     # Υπολογίζουμε την ομοιότητα cosine similarity μεταξύ του query και κάθε προϊόντος
-
     similarities = []
     for product_vector in product_vectors:
         dot_product = np.dot(query_vector, product_vector)
@@ -116,7 +119,7 @@ def content_based_filtering():
         similarities.append(similarity)
 
     # Επιλέγουμε τα προϊόντα που έχουν ομοιότητα πάνω από 70%
-    similar_products = [product for product, similarity in zip(collection.find(), similarities) if similarity > 0.7]
+    similar_products = [product for product, similarity in zip(product_documents, similarities) if similarity > 0.7]
 
     # Επιστρέφουμε τα ονόματα των παρόμοιων προϊόντων
     return jsonify([product['name'] for product in similar_products])
@@ -137,8 +140,8 @@ def crawler():
     res = [element.text for element in elements]
 
     return jsonify(res)
+    # END CODE HERE
+
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-    # END CODE HERE
