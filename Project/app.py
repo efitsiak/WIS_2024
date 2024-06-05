@@ -19,18 +19,6 @@ mongo = PyMongo(app)
 mongo.db.products.create_index([("name", TEXT)])
 
 
-@app.route("/")
-def index():
-    return render_template('homepage.html')
-
-@app.route("/products")
-def products():
-    try:
-        return render_template('products.html')
-    except Exception as e:
-        print(f"Error: {e}")
-        return "An error occurred while trying to load the products page."
-
 
 
 @app.route("/search", methods=["GET"])
