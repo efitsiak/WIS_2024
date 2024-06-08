@@ -2,7 +2,6 @@ const api = "http://127.0.0.1:5000";
 
 window.onload = () => {
     // BEGIN CODE HERE
-    const api = "http://127.0.0.1:5000";
     const searchButton = document.getElementById('search-button');
     const addProductForm = document.getElementById('dataForm');
 
@@ -71,7 +70,7 @@ productFormOnSubmit = (event) => {
             color: document.getElementById('inputColor').value,
             size: document.getElementById('inputSize').value,
         };
-
+        console.log("Form data:", formData);
         fetch('/add-product', {
             method: 'POST',
             headers: {
@@ -79,13 +78,15 @@ productFormOnSubmit = (event) => {
             },
             body: JSON.stringify(formData)
         })
-        .then(response => {
-            if (response.ok) {
-                window.location.href = '/products';
-            } else {
-                throw new Error('Form submission failed');
-            }
-        })
+        .then(response => response.json())
+            .then(data => {
+                console.log("Response data:", data); // Debug statement
+                if (data.status === "success") {
+                    window.location.href = '/products.html';
+                } else {
+                    throw new Error('Form submission failed');
+                }
+            })
         .catch(error => {
             console.error('Error:', error);
         });

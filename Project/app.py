@@ -76,6 +76,8 @@ def add_product():
         'extra large': 4
     }
     size_code = sizes_mapping.get(data.get('size').lower())
+    if color_code is None or size_code is None:
+        return jsonify({"error": "Invalid color or size"}), 400
     mongo.db.products.insert_one({
         "name": name,
         "year": production_year,
@@ -141,6 +143,3 @@ def crawler():
     return jsonify(res)
     # END CODE HERE
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
