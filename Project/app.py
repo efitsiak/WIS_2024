@@ -1,12 +1,11 @@
 # BEGIN CODE HERE
-import numpy as np
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 from pymongo import TEXT
+import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-
 
 # END CODE HERE
 
